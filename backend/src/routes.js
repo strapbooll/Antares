@@ -22,12 +22,12 @@ routes.post('/posts', multer(multerConfigs).single("file"), async (req, res) => 
 });
 
 routes.delete('/posts/:id', async (req, res) => {
-    console.log(req.params.id);
+    
     const post = await Post.findById(req.params.id);
 
     await post.remove();
-
-    return res.send();
+    const { name } = post;
+    return res.send({ message: `File ${name} deleted` });
 });
 
 module.exports = routes;

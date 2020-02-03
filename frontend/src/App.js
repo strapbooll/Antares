@@ -7,6 +7,9 @@ import { Container, Content } from "./styles";
 
 import Upload from "./components/Upload";
 import FileList from "./components/FileList";
+import Header from "./components/Header";
+import Message from "./components/Message";
+
 import api from "./services/api";
 
 class App extends Component {
@@ -18,6 +21,7 @@ class App extends Component {
     const response = await api.get("/posts");
 
     this.setState({
+      message: '',
       uploadedFiles: response.data.map(file => ({
         id: file._id,
         name: file.name,
@@ -40,7 +44,7 @@ class App extends Component {
       name: file.name,
       readableSize: filesize(file.size),
       preview: URL.createObjectURL(file),
-      progress: 50,
+      progress: 0,
       uploaded: false,
       error: false,
       url: null
@@ -70,7 +74,7 @@ class App extends Component {
       .post("/posts", data, {
         onUploadProgress: e => {
           const progress = parseInt(Math.round((e.loaded * 100) / e.total));
-
+          console.log(progress);
           this.updateFile(uploadedFile.id, {
             progress
           });
@@ -91,25 +95,34 @@ class App extends Component {
   };
 
   handleDelete = async id => {
-    await api.delete(`posts/${id}`);
+    await api.delete(`posts/${id}`).then((response) => {
+      this.setState({
+        message: response.data.message,
+      });
+    })
+      
 
     this.setState({
-      uploadedFiles: this.state.uploadedFiles.filter(file => file.id != id)
+      uploadedFiles: this.state.uploadedFiles.filter(file => file.id !== id)
     });
   };
 
   render() {
-    const { uploadedFiles } = this.state;
+    const { message, uploadedFiles } = this.state;
     return (
-      <Container>
-        <Content>
+      <>
+      <Header />
+      <Container>   
+        <Content>  
+          {!!message && (<Message message={message}></Message>)}        
           <Upload onUpload={this.handleUpload} />
           {!!uploadedFiles.length && (
             <FileList files={uploadedFiles} onDelete={this.handleDelete} />
-          )}
-        </Content>
-        <GlobalStyle />
-      </Container>
+          )}          
+        </Content>        
+        <GlobalStyle />        
+      </Container>      
+      </>
     );
   }
 }
